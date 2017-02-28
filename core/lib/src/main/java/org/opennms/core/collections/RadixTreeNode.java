@@ -42,5 +42,6 @@ public interface RadixTreeNode<T> {
 	T getContent();
 	void addChildren(T[] chain);
 	Set<RadixTreeNode<T>> getChildren();
+	int size();
 	String toStringWithPrefix(String prefix);
 }

@@ -32,6 +32,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * This class implements the {@link RadixTreeNode} interface by storing an
@@ -42,6 +43,8 @@ import java.util.Set;
  * @param <T> The content type of each node
  */
 public class RadixTreeNodeImpl<T> implements RadixTreeNode<T> {
+
+	private static final String TO_STRING_INDENT = "  ";
 
 	private final T content;
 	private final Set<RadixTreeNode<T>> children = new LinkedHashSet<>();
@@ -73,13 +76,19 @@ public class RadixTreeNodeImpl<T> implements RadixTreeNode<T> {
 		for (final RadixTreeNode<T> node : children) {
 			// If the head of the chain matches the content of any child nodes...
 			if (head.equals(node.getContent())) {
-				// Then append the subsequent members of the chain to the node
-				node.addChildren(Arrays.copyOfRange(chain, 1, chain.length));
-				return;
+				if (chain.length == 1) {
+					// TODO: If there are no more children, we need to mark that this
+					// stage is a valid termination somehow
+				} else {
+					// Then append the subsequent members of the chain to the node
+					node.addChildren(Arrays.copyOfRange(chain, 1, chain.length));
+					return;
+				}
 			}
 		}
 		// If the object doesn't exist in the root element yet, add a new tree for it
-		children.add(new RadixTreeNodeImpl<>(chain));
+		RadixTreeNode<T> newNode = new RadixTreeNodeImpl<>(chain);
+		children.add(newNode);
 	}
 
 	@Override
@@ -88,17 +97,25 @@ public class RadixTreeNodeImpl<T> implements RadixTreeNode<T> {
 	}
 
 	@Override
+	public int size() {
+		// Sum up the size of the children
+		int retval = getChildren().stream().collect(Collectors.summingInt(RadixTreeNode::size));
+		// And add 1
+		return ++retval;
+	}
+
+	@Override
 	public String toStringWithPrefix(String prefix) {
-	    StringBuffer value = new StringBuffer();
-	    value.append(content == null ? "" : content.toString()).append("\n");
-	    for (RadixTreeNode<T> child : children) {
-	        value.append(prefix).append(child.toStringWithPrefix(prefix + "\t"));
-	    }
-	    return value.toString();
+		StringBuffer value = new StringBuffer();
+		value.append(content == null ? "" : content.toString()).append("\n");
+		for (RadixTreeNode<T> child : children) {
+			value.append(prefix).append(child.toStringWithPrefix(prefix + TO_STRING_INDENT));
+		}
+		return value.toString();
 	}
 
 	@Override
 	public String toString() {
-	    return toStringWithPrefix("");
+		return toStringWithPrefix("");
 	}
 }
