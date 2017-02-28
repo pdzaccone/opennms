@@ -86,7 +86,7 @@ public class RadixTreeParser implements ByteBufferParser<Event> {
 
 	@Override
 	public CompletableFuture<Event> parse(ByteBuffer incoming) {
-		ParserState state = new ParserState(incoming, new EventBuilder("uei.opennms.org/test", this.getClass().getSimpleName()));
+		ParserState state = new ParserState(incoming, new EventBuilder());
 
 		// TODO: Use better collection than ArrayList?
 		final List<CompletableFuture<ParserState>> finishedFutures = new ArrayList<>();

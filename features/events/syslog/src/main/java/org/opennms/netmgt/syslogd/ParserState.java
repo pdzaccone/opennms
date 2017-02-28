@@ -45,7 +45,7 @@ public class ParserState {
 	public final EventBuilder builder;
 
 	public ParserState(ByteBuffer input) {
-		this(input, new EventBuilder("uei.opennms.org/test", ParserState.class.getSimpleName()));
+		this(input, new EventBuilder());
 	}
 
 	public ParserState(ByteBuffer input, EventBuilder builder) {

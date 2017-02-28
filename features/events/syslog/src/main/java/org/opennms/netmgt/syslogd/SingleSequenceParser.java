@@ -52,7 +52,7 @@ public class SingleSequenceParser implements ByteBufferParser<Event> {
 	public CompletableFuture<Event> parse(ByteBuffer incoming) {
 
 		// Put all mutable parts of the parse operation into a state object
-		final ParserState state = new ParserState(incoming, new EventBuilder("uei.opennms.org/test", this.getClass().getSimpleName()));
+		final ParserState state = new ParserState(incoming, new EventBuilder());
 
 		CompletableFuture<ParserState> future = CompletableFuture.completedFuture(state);
 
