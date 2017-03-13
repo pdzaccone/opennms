@@ -106,10 +106,12 @@
 						<bundle>mvn:org.opennms.core/org.opennms.core.web/${project.version}</bundle>
 						<bundle>mvn:org.opennms.features.geocoder/org.opennms.features.geocoder.google/${project.version}</bundle>
 						<bundle>mvn:org.opennms.features.geocoder/org.opennms.features.geocoder.nominatim/${project.version}</bundle>
+						<bundle>mvn:org.opennms.features.geolocation/org.opennms.features.geolocation.api/${project.version}</bundle>
 					</bundles>
 					<features>
 						<feature>opennms-core-web</feature>
 						<feature>vaadin</feature>
+                        <feature>geolocation</feature>
 					</features>
 					<!--
 					<repositories>
@@ -192,8 +194,9 @@
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
-			<groupId>org.opennms.features.geocoder</groupId>
-			<artifactId>org.opennms.features.geocoder.api</artifactId>
+			<groupId>org.opennms.features.geolocation</groupId>
+			<artifactId>org.opennms.features.geolocation.api</artifactId>
+			<version>${project.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.discotools.gwt.leaflet</groupId>
@@ -275,6 +278,12 @@
 		    <version>0.47</version>
 		    <scope>test</scope>
 		</dependency>
-	</dependencies>
+        <dependency>
+            <groupId>com.google.gwt</groupId>
+            <artifactId>gwt-servlet</artifactId>
+			<version>${gwtVersion}</version>
+			<scope>test</scope>
+        </dependency>
+    </dependencies>
 
 </project>

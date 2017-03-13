@@ -90,6 +90,7 @@
         hibernate.cache=false
         hibernate.cache.use_query_cache=false
         hibernate.jdbc.batch_size=0
+        <!-- hibernate.show_sql=true -->
         <!-- hibernate.format_sql=true -->
       </value>
     </property>
@@ -426,7 +427,7 @@
     <constructor-arg value="file:${opennms.home}/etc/surveillance-views.xml" />
   </bean>
 
-  <bean id="surveillanceViewConfigDao" class="org.opennms.netmgt.dao.castor.DefaultSurveillanceViewConfigDao">
+  <bean id="surveillanceViewConfigDao" class="org.opennms.netmgt.dao.jaxb.DefaultSurveillanceViewConfigDao">
     <property name="configResource" ref="surveillanceViewConfigResourceLocation" />
   </bean>
   
@@ -435,11 +436,11 @@
   <bean id="databaseReportConfigResourceLocation" class="java.lang.String">
     <constructor-arg value="file:${opennms.home}/etc/database-reports.xml" />
   </bean>
-  
-  <bean id="databaseReportConfigDao" class="org.opennms.netmgt.dao.castor.DefaultDatabaseReportConfigDao">
+
+  <bean id="databaseReportConfigDao" class="org.opennms.netmgt.dao.jaxb.DefaultDatabaseReportConfigDao">
     <property name="configResource" ref="databaseReportConfigResourceLocation" />
   </bean>
-  
+
   <onmsgi:service interface="org.opennms.netmgt.dao.api.DatabaseReportConfigDao" ref="databaseReportConfigDao" />
   
   <bean id="availabilityReportConfigResourceLocation" class="java.lang.String">
@@ -479,6 +480,11 @@
   </bean>
 
   <onmsgi:service interface="org.opennms.netmgt.dao.api.FilterFavoriteDao" ref="filterFavoriteDao" />
+
+  <bean id="genericHibernateAccessor" class="org.opennms.netmgt.dao.hibernate.GenericHibernateAccessor">
+    <property name="sessionFactory" ref="sessionFactory" />
+  </bean>
+  <onmsgi:service interface="org.opennms.netmgt.dao.api.GenericPersistenceAccessor" ref="genericHibernateAccessor" />
 
   <bean id="topologyDao" class="org.opennms.netmgt.dao.hibernate.TopologyDaoHibernate">
     <property name="sessionFactory" ref="sessionFactory" />
@@ -521,7 +527,7 @@
     <constructor-arg value="file:${opennms.home}/etc/statsd-configuration.xml" />
   </bean>
 
-  <bean id="statsdConfigDao" class="org.opennms.netmgt.dao.castor.DefaultStatisticsDaemonConfigDao">
+  <bean id="statsdConfigDao" class="org.opennms.netmgt.dao.jaxb.DefaultStatisticsDaemonConfigDao">
     <property name="configResource" ref="statsdConfigResourceLocation" />
     <property name="reloadCheckInterval" value="-1" />
   </bean>

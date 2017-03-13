@@ -1,18 +1,29 @@
 /*******************************************************************************
- * This file is part of OpenNMS(R). Copyright (C) 2014 The OpenNMS Group, Inc.
- * OpenNMS(R) is Copyright (C) 1999-2014 The OpenNMS Group, Inc. OpenNMS(R) is
- * a registered trademark of The OpenNMS Group, Inc. OpenNMS(R) is free
- * software: you can redistribute it and/or modify it under the terms of the
- * GNU Affero General Public License as published by the Free Software
- * Foundation, either version 3 of the License, or (at your option) any later
- * version. OpenNMS(R) is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
- * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
- * License for more details. You should have received a copy of the GNU Affero
- * General Public License along with OpenNMS(R). If not, see:
- * http://www.gnu.org/licenses/ For more information contact: OpenNMS(R)
- * Licensing <license@opennms.org> http://www.opennms.org/
- * http://www.opennms.com/
+ * This file is part of OpenNMS(R).
+ *
+ * Copyright (C) 2014 The OpenNMS Group, Inc.
+ * OpenNMS(R) is Copyright (C) 1999-2014 The OpenNMS Group, Inc.
+ *
+ * OpenNMS(R) is a registered trademark of The OpenNMS Group, Inc.
+ *
+ * OpenNMS(R) is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License,
+ * or (at your option) any later version.
+ *
+ * OpenNMS(R) is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with OpenNMS(R).  If not, see:
+ *      http://www.gnu.org/licenses/
+ *
+ * For more information contact:
+ *     OpenNMS(R) Licensing <license@opennms.org>
+ *     http://www.opennms.org/
+ *     http://www.opennms.com/
  *******************************************************************************/
 
 package org.opennms.netmgt.enlinkd;
@@ -72,7 +83,6 @@ public final class NodeDiscoveryBridge extends NodeDiscovery {
     }
 
     protected void runCollection() {
-
         LOG.info("run: start: node discovery operations for bridge: '{}'",
                  getNodeId());
         final Date now = new Date();
@@ -131,11 +141,16 @@ public final class NodeDiscoveryBridge extends NodeDiscovery {
         LOG.debug("run: found on node: '{}' bridge ifindex map {}",
                   getNodeId(), bridgeifindex);
         bft = walkDot1qTpFdb(getPeer(),bridgeifindex, bft);
+        LOG.debug("run: bridge: '{}' bft size {}", getNodeId(), bft.size());
 
-        m_linkd.getQueryManager().store(getNodeId(), bft);
+        if (bft.size() > 0) {
+            LOG.debug("run: updating topology bridge: '{}'", getNodeId());
+        	m_linkd.getQueryManager().store(getNodeId(), bft);
+        	m_linkd.scheduleBridgeTopologyDiscovery(getNodeId());
+        }
         LOG.debug("run: reconciling bridge: '{}' time {}", getNodeId(), now);
+        m_linkd.collectedBft(getNodeId());
         m_linkd.getQueryManager().reconcileBridge(getNodeId(), now);
-        LOG.debug("run: updating topology bridge: '{}'", getNodeId());
         LOG.info("run: end: node discovery operations for bridge: '{}'",
                  getNodeId());
     }
@@ -199,7 +214,7 @@ public final class NodeDiscoveryBridge extends NodeDiscovery {
             get();
        } catch (ExecutionException e) {
            LOG.info("run: Agent error while scanning the vtpVersion table", e);
-           return null; 
+           return vlanmap;
        } catch (final InterruptedException e) {
            LOG.info("run: Bridge Linkd node collection interrupted, exiting",
                      e);
@@ -428,4 +443,8 @@ public final class NodeDiscoveryBridge extends NodeDiscovery {
         return "BridgeLinkDiscovery";
     }
 
+    @Override
+    public boolean isReady() {
+        return m_linkd.collectBft(getNodeId());
+    }
 }

@@ -11,6 +11,10 @@
     <packaging>pom</packaging>
     <name>OpenNMS :: Features :: Minion :: Default Repository</name>
 
+    <properties>
+        <minionHawtioVersion>2.0.0</minionHawtioVersion>
+    </properties>
+
     <build>
         <plugins>
             <plugin>
@@ -35,24 +39,26 @@
                                 <descriptor>mvn:org.opennms.karaf/opennms/${project.version}/xml/features</descriptor>
                                 <!-- Add Minion features -->
                                 <descriptor>mvn:org.opennms.karaf/opennms/${project.version}/xml/minion</descriptor>
+                                <!-- Additional tools -->
+                                <descriptor>mvn:io.hawt/hawtio-karaf/${minionHawtioVersion}/xml/features</descriptor>
                             </descriptors>
                             <!-- To ensure that all JAR files for a feature 
                                 are included in the repository tar.gz file, add the feature to this list. -->
                             <features>
+                                <feature>opennms-core-ipc-sink-camel</feature>
+                                <feature>opennms-core-ipc-sink-kafka</feature>
                                 <feature>opennms-syslogd-listener-javanet</feature>
                                 <feature>opennms-syslogd-listener-camel-netty</feature>
-                                <feature>opennms-syslogd-listener-nio</feature>
-                                <feature>opennms-syslogd-handler-minion</feature>
-                                <feature>opennms-syslogd-handler-kafka</feature>
                                 <feature>opennms-trapd-listener</feature>
-                                <feature>opennms-trapd-handler-minion</feature>
-                                <feature>opennms-trapd-handler-kafka</feature>
                                 <feature>minion-shell</feature>
                                 <feature>minion-heartbeat-producer</feature>
                                 <feature>minion-snmp-proxy</feature>
                                 <feature>minion-provisiond-detectors</feature>
+                                <feature>minion-provisiond-requisitions</feature>
                                 <feature>minion-poller</feature>
+                                <feature>minion-collection</feature>
                                 <feature>minion-icmp-proxy</feature>
+                                <feature>hawtio-offline</feature>
                             </features>
                             <repository>target/maven-repo</repository>
                         </configuration>
@@ -116,6 +122,11 @@
         </dependency>
         <dependency>
             <groupId>org.opennms.features.minion.shell</groupId>
+            <artifactId>org.opennms.features.minion.shell.collection</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.opennms.features.minion.shell</groupId>
             <artifactId>org.opennms.features.minion.shell.poller</artifactId>
             <version>${project.version}</version>
         </dependency>
@@ -128,6 +139,10 @@
             <groupId>org.opennms.features.minion.heartbeat</groupId>
             <artifactId>org.opennms.features.minion.heartbeat.producer</artifactId>
             <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.opennms</groupId>
+            <artifactId>opennms-requisition-service</artifactId>
         </dependency>
         <dependency>
             <groupId>org.opennms</groupId>
@@ -186,6 +201,11 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
+            <groupId>org.opennms.features.collection</groupId>
+            <artifactId>org.opennms.features.collection.collectors</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
             <groupId>org.opennms.features</groupId>
             <artifactId>org.opennms.features.wsman</artifactId>
             <version>${project.version}</version>
@@ -201,6 +221,11 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
+            <groupId>org.opennms.core.ipc.sink</groupId>
+            <artifactId>org.opennms.core.ipc.sink.kafka-impl</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
             <groupId>org.opennms.features.poller</groupId>
             <artifactId>org.opennms.features.poller.client-rpc</artifactId>
         </dependency>
@@ -208,6 +233,14 @@
             <groupId>org.opennms.features.poller.monitors</groupId>
             <artifactId>org.opennms.features.poller.monitors.core</artifactId>
             <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.opennms.features</groupId>
+            <artifactId>org.opennms.features.jdbc-collector</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.opennms</groupId>
+            <artifactId>opennms-vmware</artifactId>
         </dependency>
     </dependencies>
 

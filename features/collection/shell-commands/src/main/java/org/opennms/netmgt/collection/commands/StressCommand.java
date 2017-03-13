@@ -34,6 +34,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -47,16 +48,17 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.felix.gogo.commands.Command;
 import org.apache.felix.gogo.commands.Option;
 import org.apache.karaf.shell.console.OsgiCommandSupport;
+import org.opennms.netmgt.collection.api.AttributeType;
 import org.opennms.netmgt.collection.api.CollectionAgent;
 import org.opennms.netmgt.collection.api.CollectionSet;
 import org.opennms.netmgt.collection.api.Persister;
 import org.opennms.netmgt.collection.api.PersisterFactory;
 import org.opennms.netmgt.collection.api.ServiceParameters;
-import org.opennms.netmgt.collection.support.builder.AttributeType;
 import org.opennms.netmgt.collection.support.builder.CollectionSetBuilder;
 import org.opennms.netmgt.collection.support.builder.InterfaceLevelResource;
 import org.opennms.netmgt.collection.support.builder.NodeLevelResource;
 import org.opennms.netmgt.collection.support.builder.Resource;
+import org.opennms.netmgt.model.ResourcePath;
 import org.opennms.netmgt.model.ResourceTypeUtils;
 import org.opennms.netmgt.rrd.RrdRepository;
 
@@ -107,6 +109,10 @@ public class StressCommand extends OsgiCommandSupport {
 
     @Option(name="-z", aliases="--string-variation-factor", description="when set, every n-th group will use unique string attribute values in each batch, defaults to 0", required=false, multiValued=false)
     int stringVariationFactor = 0;
+
+    @Option(name="-x", aliases="--rra", description="Round Robin Archives, defaults to the pritine content on datacollection-config.xml", required=false, multiValued=true)
+    List<String> rras = null;
+
 
     private final AtomicBoolean abort = new AtomicBoolean(false);
 
@@ -174,13 +180,17 @@ public class StressCommand extends OsgiCommandSupport {
         RrdRepository repository = new RrdRepository();
         repository.setStep(Math.max(intervalInSeconds, 1));
         repository.setHeartBeat(repository.getStep() * 2);
-        repository.setRraList(Lists.newArrayList(
+        if (rras != null && rras.size() > 0) {
+            repository.setRraList(rras);
+        } else {
+            repository.setRraList(Lists.newArrayList(
                 // Use the default list of RRAs we provide in our stock configuration files
                 "RRA:AVERAGE:0.5:1:2016",
                 "RRA:AVERAGE:0.5:12:1488",
                 "RRA:AVERAGE:0.5:288:366",
                 "RRA:MAX:0.5:288:366",
                 "RRA:MIN:0.5:288:366"));
+        }
         repository.setRrdBaseDir(Paths.get(System.getProperty("opennms.home"),"share","rrd","snmp").toFile());
 
         // Calculate how we fast we should insert the collection sets
@@ -279,7 +289,7 @@ public class StressCommand extends OsgiCommandSupport {
             for (int attributeId = 0; attributeId < numberOfNumericAttributesPerGroup; attributeId++) {
                 // Generate a predictable, non-constant number
                 int value = groupId * attributeId + seed.incrementAndGet() % 100;
-                builder.withNumericAttribute(resource, groupName, "metric" + attributeId, value, AttributeType.GAUGE);
+                builder.withNumericAttribute(resource, groupName, "metric_" + groupId + "_" + attributeId, value, AttributeType.GAUGE);
                 numericAttributesGenerated.mark();
             }
 
@@ -323,6 +333,11 @@ public class StressCommand extends OsgiCommandSupport {
         @Override
         public InetAddress getAddress() {
             return null;
+        }
+
+        @Override
+        public Set<String> getAttributeNames() {
+            return Collections.emptySet();
         }
 
         @Override
@@ -376,15 +391,20 @@ public class StressCommand extends OsgiCommandSupport {
         }
 
         @Override
-        public File getStorageDir() {
+        public ResourcePath getStorageResourcePath() {
             // Copied from org.opennms.netmgt.collectd.org.opennms.netmgt.collectd#getStorageDir
-            File dir = new File(Integer.toString(getNodeId()));
             final String foreignSource = getForeignSource();
             final String foreignId = getForeignId();
+
+            final ResourcePath dir;
             if(isStoreByForeignSource() && foreignSource != null && foreignId != null) {
-                File fsDir = new File(ResourceTypeUtils.FOREIGN_SOURCE_DIRECTORY, foreignSource);
-                dir = new File(fsDir, foreignId);
+                dir = ResourcePath.get(ResourceTypeUtils.FOREIGN_SOURCE_DIRECTORY,
+                                       foreignSource,
+                                       foreignId);
+            } else {
+                dir = ResourcePath.get(String.valueOf(getNodeId()));
             }
+
             return dir;
         }
 

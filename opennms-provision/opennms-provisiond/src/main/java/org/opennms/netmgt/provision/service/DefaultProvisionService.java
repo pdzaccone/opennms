@@ -1,8 +1,8 @@
 /*******************************************************************************
  * This file is part of OpenNMS(R).
  *
- * Copyright (C) 2008-2014 The OpenNMS Group, Inc.
- * OpenNMS(R) is Copyright (C) 1999-2014 The OpenNMS Group, Inc.
+ * Copyright (C) 2008-2017 The OpenNMS Group, Inc.
+ * OpenNMS(R) is Copyright (C) 1999-2017 The OpenNMS Group, Inc.
  *
  * OpenNMS(R) is a registered trademark of The OpenNMS Group, Inc.
  *
@@ -53,6 +53,7 @@ import org.opennms.netmgt.dao.api.CategoryDao;
 import org.opennms.netmgt.dao.api.IpInterfaceDao;
 import org.opennms.netmgt.dao.api.MonitoredServiceDao;
 import org.opennms.netmgt.dao.api.MonitoringLocationDao;
+import org.opennms.netmgt.dao.api.MonitoringLocationUtils;
 import org.opennms.netmgt.dao.api.NodeDao;
 import org.opennms.netmgt.dao.api.RequisitionedCategoryAssociationDao;
 import org.opennms.netmgt.dao.api.ServiceTypeDao;
@@ -107,6 +108,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
+
+import com.google.common.base.Strings;
 
 /**
  * DefaultProvisionService
@@ -182,7 +185,7 @@ public class DefaultProvisionService implements ProvisionService, InitializingBe
 
     @Autowired
     private LocationAwareDetectorClient m_locationAwareDetectorClient;
-    
+
     @Autowired
     private LocationAwareDnsLookupClient m_locationAwareDnsLookuClient;
 
@@ -788,6 +791,10 @@ public class DefaultProvisionService implements ProvisionService, InitializingBe
 
         node.setCategories(dbCategories);
 
+        if (node.getLocation() == null || Strings.isNullOrEmpty(node.getLocation().getLocationName())) {
+            node.setLocation(m_monitoringLocationDao.getDefaultLocation());
+        }
+
         // fill in real service types
         node.visit(new ServiceTypeFulfiller());
 
@@ -1011,6 +1018,12 @@ public class DefaultProvisionService implements ProvisionService, InitializingBe
             final ForeignSource fs = m_foreignSourceRepository.getForeignSource(effectiveForeignSource);
 
             final Duration scanInterval = fs.getScanInterval();
+
+            if (scanInterval.getMillis() <= 0) {
+                LOG.debug("Node ({}/{}/{}) scan interval is zero, skipping schedule.", node.getId(), node.getForeignSource(), node.getForeignId());
+                return null;
+            }
+
             Duration initialDelay = Duration.ZERO;
             if (node.getLastCapsdPoll() != null && !force) {
                 final DateTime nextPoll = new DateTime(node.getLastCapsdPoll().getTime()).plus(scanInterval);
@@ -1350,7 +1363,7 @@ public class DefaultProvisionService implements ProvisionService, InitializingBe
     @Override
     public OnmsNode createUndiscoveredNode(final String ipAddress, final String foreignSource, final String locationString) {
         final String effectiveForeignSource = foreignSource == null ? FOREIGN_SOURCE_FOR_DISCOVERED_NODES : foreignSource;
-        final String effectiveLocationName = MonitoringLocationDao.isDefaultLocationName(locationString) ? null : locationString;
+        final String effectiveLocationName = MonitoringLocationUtils.isDefaultLocationName(locationString) ? null : locationString;
 
         final OnmsNode node = new UpsertTemplate<OnmsNode, NodeDao>(m_transactionManager, m_nodeDao) {
 
@@ -1359,7 +1372,7 @@ public class DefaultProvisionService implements ProvisionService, InitializingBe
                 // Find all of the nodes in the target requisition with the given IP address
                 return m_nodeDao.findByForeignSourceAndIpAddress(effectiveForeignSource, ipAddress).stream().filter(n -> {
                     // Now filter the nodes by location
-                    final String existingLocationName = MonitoringLocationDao.getLocationNameOrNullIfDefault(n);
+                    final String existingLocationName = MonitoringLocationUtils.getLocationNameOrNullIfDefault(n);
                     return Objects.equals(existingLocationName, effectiveLocationName);
                 }).findFirst().orElse(null);
             }
@@ -1493,7 +1506,7 @@ public class DefaultProvisionService implements ProvisionService, InitializingBe
     public LocationAwareDetectorClient getLocationAwareDetectorClient() {
         return m_locationAwareDetectorClient;
     }
-    
+
     @Override
     public LocationAwareSnmpClient getLocationAwareSnmpClient() {
         return m_locationAwareSnmpClient;

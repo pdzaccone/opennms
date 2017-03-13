@@ -1,3 +1,31 @@
+/*******************************************************************************
+ * This file is part of OpenNMS(R).
+ *
+ * Copyright (C) 2014 The OpenNMS Group, Inc.
+ * OpenNMS(R) is Copyright (C) 1999-2014 The OpenNMS Group, Inc.
+ *
+ * OpenNMS(R) is a registered trademark of The OpenNMS Group, Inc.
+ *
+ * OpenNMS(R) is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License,
+ * or (at your option) any later version.
+ *
+ * OpenNMS(R) is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with OpenNMS(R).  If not, see:
+ *      http://www.gnu.org/licenses/
+ *
+ * For more information contact:
+ *     OpenNMS(R) Licensing <license@opennms.org>
+ *     http://www.opennms.org/
+ *     http://www.opennms.com/
+ *******************************************************************************/
+
 package org.opennms.netmgt.enlinkd;
 
 import java.util.ArrayList;
@@ -488,22 +516,31 @@ public class NodeDiscoveryBridgeTopology extends NodeDiscovery {
 
     public NodeDiscoveryBridgeTopology(EnhancedLinkd linkd, Node node) {
         super(linkd, node);
-        setInitialSleepTime(linkd.getInitialSleepTime()+180000);
     }
 
     @Override
     public void run() {
+
         if (!m_linkd.getQueryManager().hasUpdatedBft(getNodeId())) {
-            LOG.info("run: node: {}, without updated bft. Rescheduling");
-            reschedule();
+            LOG.info("run: node: {}, no bft.Exiting Bridge Topology Discovery", getNodeId());
             return;
         }
-        
-        Date now = new Date();
+
+    	List<BridgeMacLink> links =  m_linkd.
+        		getQueryManager().
+        		getBridgeTopologyUpdateBFT(
+        				getNodeId());
+    	if (links == null || links.size() == 0) {
+            LOG.debug("run: node: {}. no updates macs found.", getNodeId());
+            return;
+    	}
+    	Date now = new Date();
                 
         Set<String> incomingSet = new HashSet<String>();
-        for (BridgeMacLink link : m_linkd.getQueryManager().getBridgeTopologyUpdateBFT(getNodeId())) {
-            incomingSet.add(link.getMacAddress());
+        synchronized (links) {
+            for (BridgeMacLink link : links) {
+                incomingSet.add(link.getMacAddress());
+            }            
         }
         LOG.debug("run: node: {}. macs found: {}", getNodeId(), incomingSet);
 
@@ -555,7 +592,6 @@ public class NodeDiscoveryBridgeTopology extends NodeDiscovery {
                                  domain,
                                  curNodeId, getInitialSleepTime());
                         schedule();
-                        m_domain.releaseLock(this);
                         return;
                     }
                     NodeDiscoveryBridgeTopology ndbt = new NodeDiscoveryBridgeTopology(m_linkd, m_linkd.getNode(curNodeId));
@@ -651,8 +687,6 @@ public class NodeDiscoveryBridgeTopology extends NodeDiscovery {
         m_domain.releaseLock(this);
         LOG.info("run: node: {}, releaseLock broadcast domain for nodes: {}.", getNodeId(),
                  m_domain.getBridgeNodesOnDomain());
-        m_runned = true;
-        reschedule();        
     }
             
     @Override
@@ -1079,6 +1113,6 @@ public class NodeDiscoveryBridgeTopology extends NodeDiscovery {
                 return null;
             }
         return goUp(up, bridge,++level);
-    }
+    }    
 }
 

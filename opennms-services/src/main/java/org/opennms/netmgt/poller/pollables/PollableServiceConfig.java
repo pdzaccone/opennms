@@ -33,6 +33,7 @@ import java.util.Objects;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.TimeUnit;
 
+import org.opennms.core.rpc.api.RequestRejectedException;
 import org.opennms.core.rpc.api.RequestTimedOutException;
 import org.opennms.netmgt.collection.api.PersisterFactory;
 import org.opennms.netmgt.config.PollOutagesConfig;
@@ -132,12 +133,20 @@ public class PollableServiceConfig implements PollConfig, ScheduleInterval {
                 .get().getPollStatus();
             LOG.debug("Finish polling {} using pkg {} result = {}", m_service, packageName, result);
             return result;
+        } catch (InterruptedException e) {
+            LOG.warn("Interrupted while invoking the poll for {}."
+                    + " Marking the service as UNKNOWN.", m_service);
+            return PollStatus.unknown("Interrupted while invoking the poll for"+m_service+". "+e);
         } catch (Throwable e) {
             final Throwable cause = e.getCause();
             if (cause != null && cause instanceof RequestTimedOutException) {
                 LOG.warn("No response was received when remotely invoking the poll for {}."
                         + " Marking the service as UNKNOWN.", m_service);
-                return PollStatus.unknown("No response received for "+m_service+". "+cause);
+                return PollStatus.unknown(String.format("No response received for %s. %s", m_service, cause));
+            } else if (cause != null && cause instanceof RequestRejectedException) {
+                LOG.warn("The request to remotely invoke the poll for {} was rejected."
+                        + " Marking the service as UNKNOWN.", m_service);
+                return PollStatus.unknown(String.format("Remote poll request rejected for %s. %s", m_service, cause));
             }
             LOG.error("Unexpected exception while polling {}. Marking service as DOWN", m_service, e);
             return PollStatus.down("Unexpected exception while polling "+m_service+". "+e);
