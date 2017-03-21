@@ -26,7 +26,7 @@
  *     http://www.opennms.com/
  *******************************************************************************/
 
-package org.opennms.features.topology.app.internal.service;
+package org.opennms.features.topology.api.support;
 
 import java.util.List;
 import java.util.function.Predicate;
