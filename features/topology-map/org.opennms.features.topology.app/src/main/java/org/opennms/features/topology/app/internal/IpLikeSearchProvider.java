@@ -300,7 +300,7 @@ public class IpLikeSearchProvider extends AbstractSearchProvider implements Sear
 
 	@Override
 	public org.opennms.features.topology.api.topo.Criteria getCriteriaFromQuery(SearchQueryHistory input) {
-		IpLikeHopCriteria c = m_ipLikeHopFactory.createCriteria(input.getQueryText());
+		IpLikeHopCriteria c = m_ipLikeHopFactory.createCriteria(input.getQuery());
 		c.setId(input.getId());
 		return c;
 	}

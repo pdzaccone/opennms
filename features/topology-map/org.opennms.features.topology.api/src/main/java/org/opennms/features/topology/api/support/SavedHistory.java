@@ -310,10 +310,6 @@ public class SavedHistory {
     }
 
     private static void applyVerticesInFocus(Set<VertexRef> focusVertices, GraphContainer graphContainer) {
-        Set<VertexHopGraphProvider.VertexHopCriteria> vertexHopCriterias = Criteria.getCriteriaForGraphContainer(graphContainer, VertexHopGraphProvider.VertexHopCriteria.class);
-//        for (VertexHopGraphProvider.VertexHopCriteria eachCriteria : vertexHopCriterias) {
-//            graphContainer.removeCriteria(eachCriteria);
-//        }
         focusVertices.forEach(vertexRef -> graphContainer.addCriteria(new VertexHopGraphProvider.DefaultVertexHopCriteria(vertexRef)));
     }
 

@@ -35,23 +35,16 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import org.opennms.features.topology.api.topo.SearchCriteria;
 
-@XmlRootElement(name="searchQuery")
+@XmlRootElement(name="search")
 @XmlAccessorType(value= XmlAccessType.FIELD)
 public class SearchQueryHistory {
-
-	private static final String delimiter = "|";
 
 	@XmlAttribute
 	private String id;
 	@XmlAttribute
 	private String namespace;
 	@XmlAttribute
-	private String queryText;
-
-//	public static <T extends Criteria & SearchCriteria> SearchQueryHistory generateFrom(T obj)
-//	{
-//		return new SearchQueryHistory(obj.getNamespace(), obj.getSearchString(), obj.getSearchString());
-//	}
+	private String query;
 
 	// Constructor for JAXB
 	public SearchQueryHistory() {
@@ -60,7 +53,7 @@ public class SearchQueryHistory {
 
 	public SearchQueryHistory(String namespace, String id, String query) {
 		this.namespace = namespace;
-		this.queryText = query;
+		this.query = query;
 		this.id = id;
 	}
 
@@ -72,8 +65,8 @@ public class SearchQueryHistory {
 		return namespace;
 	}
 
-	public String getQueryText() {
-		return queryText;
+	public String getQuery() {
+		return query;
 	}
 
 	public String getId() {

@@ -93,7 +93,7 @@ public class AlarmSearchProvider extends AbstractSearchProvider implements Searc
 	@Override
 	public Criteria getCriteriaFromQuery(SearchQueryHistory input) {
 		// TODO RS Verify that this actually works... node label seems to be missing
-		SearchResult sResult = new SearchResult(input.getNamespace(), input.getId(), input.getQueryText(), input.getQueryText());
+		SearchResult sResult = new SearchResult(input.getNamespace(), input.getId(), input.getQuery(), input.getQuery());
 		AlarmSearchResult aResult = new AlarmSearchResult(sResult);
 		AlarmHopCriteria c = m_alarmHopFactory.createCriteria(aResult);
 		c.setId(input.getId());

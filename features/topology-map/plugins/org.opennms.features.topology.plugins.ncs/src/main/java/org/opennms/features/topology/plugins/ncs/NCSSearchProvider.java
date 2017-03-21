@@ -98,7 +98,7 @@ public class NCSSearchProvider extends AbstractSearchProvider implements SearchP
 
     @Override
     public Criteria getCriteriaFromQuery(SearchQueryHistory input) {
-        SearchResult searchResult = new SearchResult(input.getNamespace(), input.getId(), input.getQueryText(), input.getQueryText());
+        SearchResult searchResult = new SearchResult(input.getNamespace(), input.getId(), input.getQuery(), input.getQuery());
         Criteria c = NCSEdgeProvider.createCriteria(Collections.singletonList(Long.parseLong(searchResult.getId())));
         return new NCSHopCriteria(searchResult.getId(), new HashSet<VertexRef>(getVertexRefsForEdges(m_ncsEdgeProvider, c)), searchResult.getLabel());
     }

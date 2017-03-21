@@ -161,7 +161,7 @@ public class CategorySearchProvider extends AbstractSearchProvider implements Se
 
     @Override
     public Criteria getCriteriaFromQuery(SearchQueryHistory input) {
-        CategoryHopCriteria c = m_categoryHopFactory.getCriteria(input.getQueryText());
+        CategoryHopCriteria c = m_categoryHopFactory.getCriteria(input.getQuery());
         c.setId(input.getId());
         return c;
     }
