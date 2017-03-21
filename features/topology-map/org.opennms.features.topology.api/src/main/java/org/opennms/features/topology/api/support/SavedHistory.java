@@ -102,7 +102,8 @@ public class SavedHistory {
     @XmlJavaTypeAdapter(StringMapAdapter.class)
     private final Map<String,String> m_settings = new HashMap<>();
 
-    @XmlElement(name="searches")
+    @XmlElementWrapper(name="searches")
+    @XmlElement(name="search-criteria")
     private final List<SearchQueryHistory> m_searchQueries = new ArrayList<>();
 
     protected SavedHistory() {
