@@ -40,6 +40,7 @@ import org.opennms.features.topology.api.topo.CollapsibleCriteria;
 import org.opennms.features.topology.api.topo.DefaultVertexRef;
 import org.opennms.features.topology.api.topo.GroupRef;
 import org.opennms.features.topology.api.topo.RefComparator;
+import org.opennms.features.topology.api.topo.SearchCriteria;
 import org.opennms.features.topology.api.topo.Vertex;
 import org.opennms.features.topology.api.topo.VertexRef;
 import org.opennms.netmgt.dao.api.IpInterfaceDao;
@@ -55,7 +56,7 @@ import org.opennms.netmgt.model.OnmsNode;
  * @author <a href=mailto:seth@opennms.org>Seth Leger</a>
  *
  */
-public class IpLikeHopCriteria extends VertexHopCriteria implements CollapsibleCriteria {
+public class IpLikeHopCriteria extends VertexHopCriteria implements CollapsibleCriteria, SearchCriteria {
 
 	public static final String NAMESPACE = "iplike";
 	private final String m_ipQuery;
@@ -64,7 +65,12 @@ public class IpLikeHopCriteria extends VertexHopCriteria implements CollapsibleC
 	private IPVertex m_collapsedVertex;
 	
 	private IpInterfaceDao m_ipIntefaceDao;
-	
+
+	@Override
+	public String getSearchString() {
+		return NAMESPACE + SearchCriteria.delimiter + m_ipQuery;
+	}
+
 
 	public static class IPVertex extends AbstractVertex implements GroupRef {
 		private Set<VertexRef> m_children = new HashSet<VertexRef>();

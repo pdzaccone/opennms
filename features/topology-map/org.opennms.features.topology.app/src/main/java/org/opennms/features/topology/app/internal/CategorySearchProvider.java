@@ -36,9 +36,12 @@ import java.util.List;
 import java.util.Set;
 
 import org.opennms.features.topology.api.GraphContainer;
+import org.opennms.features.topology.api.support.HistoryAwareSearchProvider;
+import org.opennms.features.topology.api.support.SearchQueryHistory;
 import org.opennms.features.topology.api.support.VertexHopGraphProvider;
 import org.opennms.features.topology.api.topo.AbstractSearchProvider;
 import org.opennms.features.topology.api.topo.CollapsibleCriteria;
+import org.opennms.features.topology.api.topo.Criteria;
 import org.opennms.features.topology.api.topo.SearchProvider;
 import org.opennms.features.topology.api.topo.SearchQuery;
 import org.opennms.features.topology.api.topo.SearchResult;
@@ -49,7 +52,7 @@ import org.opennms.netmgt.dao.api.CategoryDao;
 import org.opennms.netmgt.dao.api.NodeDao;
 import org.opennms.netmgt.model.OnmsCategory;
 
-public class CategorySearchProvider extends AbstractSearchProvider implements SearchProvider {
+public class CategorySearchProvider extends AbstractSearchProvider implements SearchProvider, HistoryAwareSearchProvider {
 
     private CategoryHopCriteriaFactory m_categoryHopFactory;
     private CategoryDao m_categoryDao;
@@ -154,5 +157,12 @@ public class CategorySearchProvider extends AbstractSearchProvider implements Se
             }
         }
         return null;
+    }
+
+    @Override
+    public Criteria getCriteriaFromQuery(SearchQueryHistory input) {
+        CategoryHopCriteria c = m_categoryHopFactory.getCriteria(input.getQueryText());
+        c.setId(input.getId());
+        return c;
     }
 }

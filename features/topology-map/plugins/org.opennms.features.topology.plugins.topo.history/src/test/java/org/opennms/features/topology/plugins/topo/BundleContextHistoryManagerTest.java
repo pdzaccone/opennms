@@ -33,6 +33,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Properties;
 
 import org.easymock.EasyMock;
@@ -47,11 +48,16 @@ import org.opennms.features.topology.api.Layout;
 import org.opennms.features.topology.api.MapViewManager;
 import org.opennms.features.topology.api.SelectionManager;
 import org.opennms.features.topology.api.support.SavedHistory;
+import org.opennms.features.topology.api.support.SearchQueryHistory;
+import org.opennms.features.topology.api.support.ServiceLocator;
 import org.opennms.features.topology.api.topo.AbstractVertex;
 import org.opennms.features.topology.api.topo.Criteria;
 import org.opennms.features.topology.api.topo.Edge;
+import org.opennms.features.topology.api.topo.SearchCriteria;
+import org.opennms.features.topology.api.topo.SearchProvider;
 import org.opennms.features.topology.api.topo.Vertex;
 import org.opennms.features.topology.api.topo.VertexRef;
+import org.opennms.features.topology.app.internal.CategorySearchProvider;
 import org.opennms.features.topology.app.internal.DefaultLayout;
 import org.opennms.features.topology.app.internal.jung.CircleLayoutAlgorithm;
 import org.opennms.features.topology.app.internal.operations.AutoRefreshToggleOperation;
@@ -67,6 +73,8 @@ import org.osgi.framework.BundleContext;
 
 public class BundleContextHistoryManagerTest  {
 
+    private static final String searchQuery = "search query 1";
+
     private static class TestVertex extends AbstractVertex {
 
         public TestVertex(String id) {
@@ -74,15 +82,56 @@ public class BundleContextHistoryManagerTest  {
         }
     }
 
+    private static class CustomSearchCriteria extends Criteria implements SearchCriteria {
+
+        private final String searchString;
+
+        private CustomSearchCriteria(String searchString) {
+            this.searchString = Objects.requireNonNull(searchString);
+        }
+
+        @Override
+        public String getSearchString() {
+            return searchString;
+        }
+
+        @Override
+        public String getId() {
+            return searchQuery;
+        }
+
+        @Override
+        public ElementType getType() {
+            return ElementType.GRAPH;
+        }
+
+        @Override
+        public String getNamespace() {
+            return "nodes";
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(searchString);
+        }
+
+        // TODO RS implement me
+        @Override
+        public boolean equals(Object obj) {
+            return true;
+        }
+    }
+
     private static final String DATA_FILE_NAME = BundleContextHistoryManager.DATA_FILE_NAME;
 
     private BundleContextHistoryManager historyManager;
-
     private GraphContainer graphContainerMock;
-
     private Graph graphMock;
-
     private BundleContext bundleContextMock;
+    private ServiceLocator serviceLocatorMock;
+    //private CategorySearchProvider searchProviderMock;
+
+    private List<SearchProvider> availableProviders;
     private List<Vertex> displayableVertices;
     private Layout selectedLayout;
 
@@ -92,14 +141,16 @@ public class BundleContextHistoryManagerTest  {
             new File(DATA_FILE_NAME).delete();
         }
 
+        serviceLocatorMock = EasyMock.createNiceMock(ServiceLocator.class);
     	bundleContextMock = EasyMock.createNiceMock(BundleContext.class);
     	graphContainerMock = EasyMock.createNiceMock(GraphContainer.class);
         graphMock = EasyMock.createNiceMock(Graph.class);
 
+        availableProviders = new ArrayList<>();
         displayableVertices = new ArrayList<>();
         selectedLayout = new DefaultLayout();
 
-        historyManager = new BundleContextHistoryManager(bundleContextMock);
+        historyManager = new BundleContextHistoryManager(bundleContextMock, serviceLocatorMock);
         historyManager.onBind(new CircleLayoutOperation());
         historyManager.onBind(new ManualLayoutOperation(null));
         historyManager.onBind(new FRLayoutOperation());
@@ -113,10 +164,12 @@ public class BundleContextHistoryManagerTest  {
         setBehaviour(bundleContextMock);
         setBehaviour(graphContainerMock);
         setBehaviour(graphMock);
+        setBehaviour(serviceLocatorMock);
 
         EasyMock.replay(graphContainerMock);
         EasyMock.replay(graphMock);
         EasyMock.replay(bundleContextMock);
+        EasyMock.replay(serviceLocatorMock);
     }
 
     @After
@@ -201,10 +254,51 @@ public class BundleContextHistoryManagerTest  {
         Assert.assertEquals(historyHash5, properties.get(user1));
     }
 
+    @Test
+    public void verifySearchCriteriaPersistence() {
+        availableProviders.add(new CategorySearchProvider(null, null));
+
+        graphContainerMock.addCriteria(new CustomSearchCriteria(searchQuery));
+        String fragment = historyManager.saveOrUpdateHistory("admin", graphContainerMock);
+        historyManager.applyHistory(fragment, graphContainerMock);
+
+        // find search criteria in criteria list and verify that they are restored
+        Criteria[] criteria = graphContainerMock.getCriteria();
+        Assert.assertTrue(criteria != null && criteria.length == 1 && criteria[0] instanceof SearchCriteria &&
+                         (((SearchCriteria) criteria[0]).getSearchString()).equals(searchQuery));
+//        for (Criteria cr : criteria)
+//        {
+//            if (cr instanceof SearchCriteria)
+//            {
+//                Assert.assertTrue((((SearchCriteria) cr).getSearchString()).equals(searchQuery));
+//            }
+//        }
+    }
+
     private static Properties loadProperties() throws IOException {
         Properties props = new Properties();
         props.load(new FileInputStream(new File(DATA_FILE_NAME)));
         return props;
+    }
+
+    private void setBehaviour(CategorySearchProvider searchProvider)
+    {
+        EasyMock
+                .expect(searchProvider.getSearchProviderNamespace())
+                .andReturn("category")
+                .anyTimes();
+
+        SearchQueryHistory sqh = new SearchQueryHistory("custom", searchQuery, searchQuery);
+
+        EasyMock.expect(searchProvider.getCriteriaFromQuery(sqh))
+                .andReturn(new CustomSearchCriteria(searchQuery));
+    }
+
+    private void setBehaviour(ServiceLocator serviceLocator) {
+        EasyMock
+                .expect(serviceLocator.findServices(SearchProvider.class, null))
+                .andReturn(availableProviders)
+                .anyTimes();
     }
 
     private void setBehaviour(Graph graphMock) {
@@ -260,7 +354,8 @@ public class BundleContextHistoryManagerTest  {
 
         EasyMock
                 .expect(graphContainerMock.getCriteria())
-                .andReturn(new Criteria[0])
+                .andReturn(new Criteria[]{new CustomSearchCriteria(searchQuery)})
+//                .andReturn(new Criteria[0])
                 .anyTimes();
     }
 

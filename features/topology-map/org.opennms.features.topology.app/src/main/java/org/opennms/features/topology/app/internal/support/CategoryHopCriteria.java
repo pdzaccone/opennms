@@ -44,7 +44,7 @@ import org.opennms.netmgt.model.OnmsNode;
  * @author <a href=mailto:seth@opennms.org>Seth Leger</a>
  *
  */
-public class CategoryHopCriteria extends VertexHopCriteria implements CollapsibleCriteria {
+public class CategoryHopCriteria extends VertexHopCriteria implements CollapsibleCriteria, SearchCriteria {
 
 	private final String m_categoryName;
 	private CategoryDao m_categoryDao;
@@ -84,6 +84,11 @@ public class CategoryHopCriteria extends VertexHopCriteria implements Collapsibl
         m_collapsedVertex.setChildren(getVertices());
 		setId(m_categoryDao.findByName(m_categoryName).getId().toString());
     }
+
+	@Override
+	public String getSearchString() {
+		return this.getNamespace() + SearchCriteria.delimiter + m_categoryName;
+	}
 
 	@Override
 	public String getNamespace() {

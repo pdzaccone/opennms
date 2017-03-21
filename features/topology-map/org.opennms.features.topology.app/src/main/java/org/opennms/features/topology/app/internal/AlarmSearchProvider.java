@@ -37,9 +37,12 @@ import java.util.Set;
 import org.opennms.core.criteria.CriteriaBuilder;
 import org.opennms.features.topology.api.GraphContainer;
 import org.opennms.features.topology.api.OperationContext;
+import org.opennms.features.topology.api.support.HistoryAwareSearchProvider;
+import org.opennms.features.topology.api.support.SearchQueryHistory;
 import org.opennms.features.topology.api.support.VertexHopGraphProvider;
 import org.opennms.features.topology.api.topo.AbstractSearchProvider;
 import org.opennms.features.topology.api.topo.CollapsibleCriteria;
+import org.opennms.features.topology.api.topo.Criteria;
 import org.opennms.features.topology.api.topo.SearchProvider;
 import org.opennms.features.topology.api.topo.SearchQuery;
 import org.opennms.features.topology.api.topo.SearchResult;
@@ -65,7 +68,7 @@ import org.slf4j.LoggerFactory;
  * @author <a href=mailto:david@opennms.org>David Hustace</a>
  *
  */
-public class AlarmSearchProvider extends AbstractSearchProvider implements SearchProvider {
+public class AlarmSearchProvider extends AbstractSearchProvider implements SearchProvider, HistoryAwareSearchProvider {
 
 	private static Logger LOG = LoggerFactory.getLogger(AlarmSearchProvider.class);
 	
@@ -86,8 +89,18 @@ public class AlarmSearchProvider extends AbstractSearchProvider implements Searc
     public boolean contributesTo(String namespace) {
         return "nodes".equals(namespace);
     }
-    
-    public class AlarmSearchResult extends SearchResult {
+
+	@Override
+	public Criteria getCriteriaFromQuery(SearchQueryHistory input) {
+		// TODO RS Verify that this actually works... node label seems to be missing
+		SearchResult sResult = new SearchResult(input.getNamespace(), input.getId(), input.getQueryText(), input.getQueryText());
+		AlarmSearchResult aResult = new AlarmSearchResult(sResult);
+		AlarmHopCriteria c = m_alarmHopFactory.createCriteria(aResult);
+		c.setId(input.getId());
+		return c;
+	}
+
+	public class AlarmSearchResult extends SearchResult {
         
         private Integer m_alarmId;
         private Integer m_nodeId;

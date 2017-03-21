@@ -40,6 +40,8 @@ import org.opennms.core.criteria.Criteria;
 import org.opennms.core.criteria.CriteriaBuilder;
 import org.opennms.features.topology.api.GraphContainer;
 import org.opennms.features.topology.api.OperationContext;
+import org.opennms.features.topology.api.support.HistoryAwareSearchProvider;
+import org.opennms.features.topology.api.support.SearchQueryHistory;
 import org.opennms.features.topology.api.support.VertexHopGraphProvider;
 import org.opennms.features.topology.api.topo.AbstractSearchProvider;
 import org.opennms.features.topology.api.topo.CollapsibleCriteria;
@@ -67,7 +69,7 @@ import org.slf4j.LoggerFactory;
  * @author <a href=mailto:david@opennms.org>David Hustace</a>
  *
  */
-public class IpLikeSearchProvider extends AbstractSearchProvider implements SearchProvider {
+public class IpLikeSearchProvider extends AbstractSearchProvider implements SearchProvider, HistoryAwareSearchProvider {
 
 	private static Logger LOG = LoggerFactory.getLogger(IpLikeSearchProvider.class);
 	
@@ -296,6 +298,13 @@ public class IpLikeSearchProvider extends AbstractSearchProvider implements Sear
         
 	}
 
+	@Override
+	public org.opennms.features.topology.api.topo.Criteria getCriteriaFromQuery(SearchQueryHistory input) {
+		IpLikeHopCriteria c = m_ipLikeHopFactory.createCriteria(input.getQueryText());
+		c.setId(input.getId());
+		return c;
+	}
+
 	private org.opennms.features.topology.api.topo.Criteria findCriterion(String resultId, GraphContainer container) {
 		
 		org.opennms.features.topology.api.topo.Criteria[] criteria = container.getCriteria();
@@ -311,7 +320,6 @@ public class IpLikeSearchProvider extends AbstractSearchProvider implements Sear
 		}
 		return null;
 	}
-	
 
     private static CollapsibleCriteria getMatchingCriteriaById(GraphContainer graphContainer, String id) {
         CollapsibleCriteria[] criteria = VertexHopGraphProvider.getCollapsibleCriteriaForContainer(graphContainer);
@@ -322,6 +330,4 @@ public class IpLikeSearchProvider extends AbstractSearchProvider implements Sear
         }
         return null;
     }
-	
-	
 }

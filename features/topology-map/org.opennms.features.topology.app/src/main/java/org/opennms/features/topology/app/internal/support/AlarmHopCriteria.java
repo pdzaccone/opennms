@@ -40,6 +40,7 @@ import org.opennms.features.topology.api.topo.CollapsibleCriteria;
 import org.opennms.features.topology.api.topo.DefaultVertexRef;
 import org.opennms.features.topology.api.topo.GroupRef;
 import org.opennms.features.topology.api.topo.RefComparator;
+import org.opennms.features.topology.api.topo.SearchCriteria;
 import org.opennms.features.topology.api.topo.Vertex;
 import org.opennms.features.topology.api.topo.VertexRef;
 import org.opennms.features.topology.app.internal.AlarmSearchProvider.AlarmSearchResult;
@@ -57,7 +58,7 @@ import org.opennms.netmgt.model.OnmsSeverity;
  * @author <a href=mailto:seth@opennms.org>Seth Leger</a>
  *
  */
-public class AlarmHopCriteria extends VertexHopCriteria implements CollapsibleCriteria {
+public class AlarmHopCriteria extends VertexHopCriteria implements CollapsibleCriteria, SearchCriteria {
 
 	public static final String NAMESPACE = "alarm";
 	
@@ -67,6 +68,11 @@ public class AlarmHopCriteria extends VertexHopCriteria implements CollapsibleCr
 	private AlarmDao m_alarmDao;
 
     private AlarmSearchResult m_searchResult;
+
+	@Override
+	public String getSearchString() {
+		return getNamespace() + SearchCriteria.delimiter + "dunno yet";
+	}
 
 	public static class AlarmVertex extends AbstractVertex implements GroupRef {
 		private Set<VertexRef> m_children = new HashSet<VertexRef>();

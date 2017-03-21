@@ -38,6 +38,8 @@ import java.util.TreeSet;
 import org.opennms.features.topology.api.GraphContainer;
 import org.opennms.features.topology.api.OperationContext;
 import org.opennms.features.topology.api.SelectionManager;
+import org.opennms.features.topology.api.support.HistoryAwareSearchProvider;
+import org.opennms.features.topology.api.support.SearchQueryHistory;
 import org.opennms.features.topology.api.support.VertexHopGraphProvider.VertexHopCriteria;
 import org.opennms.features.topology.api.topo.AbstractSearchProvider;
 import org.opennms.features.topology.api.topo.Criteria;
@@ -51,7 +53,7 @@ import org.opennms.features.topology.plugins.ncs.internal.NCSCriteriaServiceMana
 import org.opennms.netmgt.model.ncs.NCSComponent;
 import org.opennms.netmgt.model.ncs.NCSComponentRepository;
 
-public class NCSSearchProvider extends AbstractSearchProvider implements SearchProvider {
+public class NCSSearchProvider extends AbstractSearchProvider implements SearchProvider, HistoryAwareSearchProvider {
 
     public static class NCSHopCriteria extends VertexHopCriteria {
 
@@ -93,6 +95,13 @@ public class NCSSearchProvider extends AbstractSearchProvider implements SearchP
 	private NCSEdgeProvider m_ncsEdgeProvider;
     private NCSCriteriaServiceManager m_serviceManager;
     NCSServiceContainer m_container;
+
+    @Override
+    public Criteria getCriteriaFromQuery(SearchQueryHistory input) {
+        SearchResult searchResult = new SearchResult(input.getNamespace(), input.getId(), input.getQueryText(), input.getQueryText());
+        Criteria c = NCSEdgeProvider.createCriteria(Collections.singletonList(Long.parseLong(searchResult.getId())));
+        return new NCSHopCriteria(searchResult.getId(), new HashSet<VertexRef>(getVertexRefsForEdges(m_ncsEdgeProvider, c)), searchResult.getLabel());
+    }
 
     public void setNcsComponentRepository(NCSComponentRepository ncsComponentRepository) {
 		m_ncsComponentRepository = ncsComponentRepository;

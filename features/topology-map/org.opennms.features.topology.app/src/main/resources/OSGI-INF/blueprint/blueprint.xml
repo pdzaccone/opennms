@@ -143,6 +143,7 @@ http://www.osgi.org/xmlns/blueprint-ext/v1.1.0 http://aries.apache.org/schemas/b
     <bean id="bundleContextServiceLocator" class="org.opennms.features.topology.app.internal.service.BundleContextServiceLocator" >
         <argument ref="blueprintBundleContext" />
     </bean>
+    <service ref="bundleContextServiceLocator" interface="org.opennms.features.topology.api.support.ServiceLocator" />
 
     <!-- Topology Service -->
     <bean id="topologyService" class="org.opennms.features.topology.app.internal.service.DefaultTopologyService" >
