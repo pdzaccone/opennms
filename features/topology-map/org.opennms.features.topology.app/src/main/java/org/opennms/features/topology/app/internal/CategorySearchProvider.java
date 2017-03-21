@@ -54,15 +54,12 @@ import org.opennms.netmgt.model.OnmsCategory;
 
 public class CategorySearchProvider extends AbstractSearchProvider implements SearchProvider, HistoryAwareSearchProvider {
 
-    private CategoryHopCriteriaFactory m_categoryHopFactory;
-    private CategoryDao m_categoryDao;
+    private final CategoryVertexProvider categoryVertexProvider;
+
     private String m_hiddenCategoryPrefix = null;
 
-    public CategorySearchProvider(CategoryDao categoryDao, NodeDao nodeDao){
-        m_categoryDao = categoryDao;
-        
-        //Not sure why we have to do this...
-        m_categoryHopFactory = new CategoryHopCriteriaFactory(categoryDao, nodeDao);
+    public CategorySearchProvider(CategoryVertexProvider categoryVertexProvider) {
+        this.categoryVertexProvider = Objects.requireNonNull(categoryVertexProvider);
     }
 
     @Override
@@ -78,7 +75,7 @@ public class CategorySearchProvider extends AbstractSearchProvider implements Se
     @Override
     public List<SearchResult> query(SearchQuery searchQuery, GraphContainer graphContainer) {
 
-        Collection<OnmsCategory> categories = m_categoryDao.findAll();
+        Collection<OnmsCategory> categories = categoryVertexProvider.getAllCategories();
 
         List<SearchResult> results = new ArrayList<SearchResult>();
         for (OnmsCategory category : categories) {
@@ -116,24 +113,16 @@ public class CategorySearchProvider extends AbstractSearchProvider implements Se
 
     @Override
     public void addVertexHopCriteria(SearchResult searchResult, GraphContainer container) {
-        CategoryHopCriteria criteria = m_categoryHopFactory.getCriteria(searchResult.getLabel());
+        CategoryHopCriteria criteria = createCriteria(searchResult.getLabel());
         criteria.setId(searchResult.getId());
         container.addCriteria(criteria);
     }
 
     @Override
     public void removeVertexHopCriteria(SearchResult searchResult, GraphContainer container) {
-        CategoryHopCriteria c = m_categoryHopFactory.getCriteria(searchResult.getLabel());
+        CategoryHopCriteria c = createCriteria(searchResult.getLabel());
         c.setId(searchResult.getId());
         container.removeCriteria(c);
-    }
-
-    public CategoryDao getCategoryDao() {
-        return m_categoryDao;
-    }
-
-    public void setCategoryDao(CategoryDao categoryDao) {
-        m_categoryDao = categoryDao;
     }
 
     public void setHiddenCategoryPrefix(String prefix) {
@@ -161,8 +150,13 @@ public class CategorySearchProvider extends AbstractSearchProvider implements Se
 
     @Override
     public Criteria getCriteriaFromQuery(SearchQueryHistory input) {
-        CategoryHopCriteria c = m_categoryHopFactory.getCriteria(input.getQuery());
+        CategoryHopCriteria c = createCriteria(input.getQuery());
         c.setId(input.getId());
         return c;
+    }
+
+    private CategoryHopCriteria createCriteria(String categoryName) {
+        CategoryHopCriteria retval = new CategoryHopCriteria(categoryName, categoryVertexProvider);
+        return retval;
     }
 }

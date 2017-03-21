@@ -33,6 +33,7 @@ import java.util.*;
 import org.opennms.features.topology.api.Constants;
 import org.opennms.features.topology.api.support.VertexHopGraphProvider.VertexHopCriteria;
 import org.opennms.features.topology.api.topo.*;
+import org.opennms.features.topology.app.internal.CategoryVertexProvider;
 import org.opennms.netmgt.dao.api.CategoryDao;
 import org.opennms.netmgt.dao.api.NodeDao;
 import org.opennms.netmgt.model.OnmsCategory;
@@ -75,7 +76,7 @@ public class CategoryHopCriteria extends VertexHopCriteria implements Collapsibl
         }
     }
 
-    protected CategoryHopCriteria(String categoryName, NodeDao nodeDao, CategoryDao categoryDao){
+    protected CategoryHopCriteria(String categoryName, CategoryVertexProvider categoryVertexProvider){
 		super(categoryName);
 		m_categoryName = categoryName;
 		m_collapsedVertex = new CategoryVertex("category", "category:" + m_categoryName, m_categoryName);

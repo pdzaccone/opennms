@@ -32,6 +32,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.Properties;
@@ -58,6 +59,7 @@ import org.opennms.features.topology.api.topo.SearchProvider;
 import org.opennms.features.topology.api.topo.Vertex;
 import org.opennms.features.topology.api.topo.VertexRef;
 import org.opennms.features.topology.app.internal.CategorySearchProvider;
+import org.opennms.features.topology.app.internal.CategoryVertexProvider;
 import org.opennms.features.topology.app.internal.DefaultLayout;
 import org.opennms.features.topology.app.internal.jung.CircleLayoutAlgorithm;
 import org.opennms.features.topology.app.internal.operations.AutoRefreshToggleOperation;
@@ -69,7 +71,10 @@ import org.opennms.features.topology.app.internal.operations.ManualLayoutOperati
 import org.opennms.features.topology.app.internal.operations.RealUltimateLayoutOperation;
 import org.opennms.features.topology.app.internal.operations.SimpleLayoutOperation;
 import org.opennms.features.topology.app.internal.operations.SpringLayoutOperation;
+import org.opennms.netmgt.model.OnmsCategory;
 import org.osgi.framework.BundleContext;
+
+import com.google.common.collect.Lists;
 
 public class BundleContextHistoryManagerTest  {
 
@@ -107,7 +112,7 @@ public class BundleContextHistoryManagerTest  {
 
         @Override
         public String getNamespace() {
-            return "nodes";
+            return "custom";
         }
 
         @Override
@@ -160,6 +165,13 @@ public class BundleContextHistoryManagerTest  {
         historyManager.onBind(new RealUltimateLayoutOperation());
         historyManager.onBind(new KKLayoutOperation());
         historyManager.onBind(new AutoRefreshToggleOperation());
+
+        new CategorySearchProvider(new CategoryVertexProvider() {
+            @Override
+            public Collection<OnmsCategory> getAllCategories() {
+                return Lists.newArrayList(new OnmsCategory("test", "test"));
+            }
+        });
 
         setBehaviour(bundleContextMock);
         setBehaviour(graphContainerMock);
@@ -264,6 +276,8 @@ public class BundleContextHistoryManagerTest  {
 
         // find search criteria in criteria list and verify that they are restored
         Criteria[] criteria = graphContainerMock.getCriteria();
+        Lists.newArrayList(criteria).contains(new CustomSearchCriteria(searchQuery));
+
         Assert.assertTrue(criteria != null && criteria.length == 1 && criteria[0] instanceof SearchCriteria &&
                          (((SearchCriteria) criteria[0]).getSearchString()).equals(searchQuery));
 //        for (Criteria cr : criteria)
@@ -352,9 +366,11 @@ public class BundleContextHistoryManagerTest  {
         		.andReturn(selectionManagerMock)
         		.anyTimes();
 
+        List<Criteria> criteria = new ArrayList<>();
+
         EasyMock
                 .expect(graphContainerMock.getCriteria())
-                .andReturn(new Criteria[]{new CustomSearchCriteria(searchQuery)})
+                .andReturn(availableCriteria)
 //                .andReturn(new Criteria[0])
                 .anyTimes();
     }

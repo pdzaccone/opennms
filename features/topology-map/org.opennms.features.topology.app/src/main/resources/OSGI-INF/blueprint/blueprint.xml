@@ -64,18 +64,16 @@ http://www.osgi.org/xmlns/blueprint-ext/v1.1.0 http://aries.apache.org/schemas/b
 
     <service id="categorySearchProvider" interface="org.opennms.features.topology.api.topo.SearchProvider">
         <bean class="org.opennms.features.topology.app.internal.CategorySearchProvider">
-            <argument ref="categoryDao"/>
-            <argument ref="nodeDao"/>
+            <argument ref="categoryVertexProvider"/>
             <property name="hiddenCategoryPrefix" value="${hiddenCategoryPrefix}" />
         </bean>
     </service>
-    
-    <bean id="categoryHistoryOperation" class=" org.opennms.features.topology.app.internal.support.CategoryHopCriteriaHistoryOperation" >
-        <property name="categoryHopCriteriaFactory" ref="categoryHopCriteriaFactory" />
+
+    <bean id="categoryVertexProvider" class="CategoryVertexProviderDao" >
+        <argument ref="categoryDao"/>
+        <argument ref="nodeDao"/>
     </bean>
     
-    <service interface="org.opennms.features.topology.api.HistoryOperation" ref="categoryHistoryOperation"/>
-
     <bean id="ipLikeHopCriteriaFactory" class="org.opennms.features.topology.app.internal.support.IpLikeHopCriteriaFactory">
         <argument ref="ipInterfaceDao"/>
     </bean>
