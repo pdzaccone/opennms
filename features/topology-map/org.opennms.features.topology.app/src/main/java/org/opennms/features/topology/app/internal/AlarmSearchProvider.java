@@ -154,7 +154,7 @@ public class AlarmSearchProvider extends AbstractSearchProvider implements Searc
     }
 
     /**
-     * This method processes the <SearchQuery> that the user has typed and returns a <SearchResult> list
+     * This method processes the <SearchQuery> that the user has typed and returns a <SearchResult> set
      * of matching IP addresses as well as the query string itself, which is collapsible, to act
      * as a subnet container.
      * 

@@ -138,7 +138,7 @@ public class NCSSearchProvider extends AbstractSearchProvider implements SearchP
 
     @Override
     public List<SearchResult> query(SearchQuery searchQuery, GraphContainer graphContainer) {
-        List<SearchResult> searchResults = new ArrayList<SearchResult>();
+        List<SearchResult> searchResults = new ArrayList<>();
 
         List<NCSComponent> components = m_ncsComponentRepository.findByType("Service");
         for (NCSComponent component : components) {

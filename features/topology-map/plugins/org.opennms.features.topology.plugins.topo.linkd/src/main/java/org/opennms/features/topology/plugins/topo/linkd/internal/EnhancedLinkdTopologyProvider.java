@@ -37,9 +37,9 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
-import java.util.Map.Entry;
 
 import javax.xml.bind.JAXBException;
 
@@ -96,7 +96,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
-import com.google.common.collect.Lists;
 
 public class EnhancedLinkdTopologyProvider extends AbstractLinkdTopologyProvider {
 
@@ -1384,7 +1383,7 @@ public class EnhancedLinkdTopologyProvider extends AbstractLinkdTopologyProvider
         //LOG.debug("SearchProvider->query: called with search query: '{}'", searchQuery);
 
         List<Vertex> vertices = getFilteredVertices();
-        List<SearchResult> searchResults = Lists.newArrayList();
+        List<SearchResult> searchResults = new ArrayList<>();
 
         for(Vertex vertex : vertices){
             if(searchQuery.matches(vertex.getLabel())) {

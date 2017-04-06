@@ -125,7 +125,7 @@ public class AbstractSearchProviderTest {
 
             @Override
             public List<SearchResult> query(SearchQuery searchQuery, GraphContainer graphContainer) {
-                List<SearchResult> verts = new ArrayList<SearchResult>();
+                List<SearchResult> verts = new ArrayList<>();
                 for (VertexRef vertexRef : m_vertexRefs) {
                     if (searchQuery.matches(vertexRef.getLabel())) {
                         verts.add(new SearchResult(vertexRef.getNamespace(), vertexRef.getId(), vertexRef.getLabel(), searchQuery.getQueryString()));

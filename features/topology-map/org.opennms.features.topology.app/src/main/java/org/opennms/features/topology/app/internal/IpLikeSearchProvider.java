@@ -101,7 +101,7 @@ public class IpLikeSearchProvider extends AbstractSearchProvider implements Sear
     public List<SearchResult> query(SearchQuery searchQuery, GraphContainer graphContainer) {
     	LOG.info("SearchProvider->query: called with search query: '{}'", searchQuery);
 
-        List<SearchResult> results = new ArrayList<SearchResult>();
+        List<SearchResult> results = new ArrayList<>();
         
 		String queryString = searchQuery.getQueryString();
 		
@@ -133,7 +133,9 @@ public class IpLikeSearchProvider extends AbstractSearchProvider implements Sear
                     SearchResult searchResult = new SearchResult(getSearchProviderNamespace(), queryString, queryString, queryString);
                     searchResult.setCollapsed(false);
                     searchResult.setCollapsible(true);
-                    results.add(searchResult);
+                    if (!results.contains(searchResult)) {
+						results.add(searchResult);
+					}
                 }
             }
 
@@ -153,8 +155,10 @@ public class IpLikeSearchProvider extends AbstractSearchProvider implements Sear
                     continue IPLOOP;
 
                 } else {
-                    results.add(createSearchResult(ip, queryString));
-
+                	SearchResult searchResult = createSearchResult(ip, queryString);
+                	if (!results.contains(searchResult)) {
+						results.add(searchResult);
+					}
                 }
             }
             LOG.info("SearchProvider->query: found: '{}' IP interfaces.", ips.size());
@@ -165,7 +169,7 @@ public class IpLikeSearchProvider extends AbstractSearchProvider implements Sear
         }
 		
 		LOG.info("SearchProvider->query: built search result with {} results.", results.size());
-		
+
         return results;
     }
 
